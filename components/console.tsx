@@ -16,6 +16,8 @@ import { track, useTrackedEvents, type TrackedEvent } from "@/lib/track";
 import { AiAssist } from "./ai-assist";
 import { DeflectionOutcomeChart, DeflectionTrendChart, EventCountChart, VolumeChart } from "./charts";
 import { Button, Modal, PriorityBadge, StatusBadge, ToastProvider, useToast } from "./ui";
+import { AiInsightsCard, DeflectionOverview } from "./deflection-overview";
+import { OUTCOMES, current, weeklyOutcomes } from "@/lib/deflection-data";
 
 type View = "overview" | "queue" | "insights";
 type DataMode = "checking" | "mock" | "connected" | "error";
@@ -103,7 +105,7 @@ function ConsoleInner() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6">
+        <main className={`flex-1 p-4 md:p-6 ${view === "overview" ? "bg-surface" : ""}`}>
           {view === "overview" && <Overview records={records} onOpen={setSelectedId} />}
           {view === "queue" && <Queue records={records} onOpen={(id) => { setSelectedId(id); track("record_opened", { record_id: id }); }} />}
           {view === "insights" && <Insights sessionEvents={events} dataMode={dataMode} />}
@@ -189,7 +191,10 @@ function Overview({ records, onOpen }: { records: CaseRecord[]; onOpen: (id: str
     { label: "Median first reply", value: "2.4 h" },
   ];
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      <AiInsightsCard />
+      <DeflectionOverview />
+      <h2 className="border-t border-line pt-6 text-base font-semibold">Case operations</h2>
       <div className="grid grid-cols-2 divide-line rounded-lg border border-line bg-surface md:grid-cols-4 md:divide-x">
         {stats.map((s) => (
           <div key={s.label} className="p-4">
@@ -452,21 +457,18 @@ function Insights({ sessionEvents, dataMode }: { sessionEvents: TrackedEvent[]; 
   const source = dataMode === "connected" ? stored : sessionEvents;
   const counts = Object.entries(source.reduce<Record<string, number>>((acc, e) => ({ ...acc, [e.event_name]: (acc[e.event_name] ?? 0) + 1 }), {}))
     .map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
-  const outcomes = [
-    { label: "Correctly deflected", value: 68, detail: "Resolved from approved knowledge", icon: BookOpenCheck, tone: "text-accent", bar: "bg-accent" },
-    { label: "Knowledge gaps", value: 14, detail: "No confident article match", icon: AlertTriangle, tone: "text-warn", bar: "bg-warn" },
-    { label: "Tried, downvoted", value: 11, detail: "Answer shown but rejected", icon: ThumbsDown, tone: "text-danger", bar: "bg-danger" },
-    { label: "Direct escalation", value: 7, detail: "Critical or sensitive cases", icon: ShieldAlert, tone: "text-muted", bar: "bg-muted" },
-  ];
-  const trend = [
-    { week: "Sep 14", knowledge: 148, gaps: 22, downvoted: 16, escalated: 8 },
-    { week: "Sep 21", knowledge: 163, gaps: 19, downvoted: 14, escalated: 7 },
-    { week: "Sep 28", knowledge: 171, gaps: 21, downvoted: 12, escalated: 9 },
-    { week: "Oct 5", knowledge: 184, gaps: 17, downvoted: 13, escalated: 6 },
-    { week: "Oct 12", knowledge: 196, gaps: 14, downvoted: 11, escalated: 7 },
-  ];
-  const total = outcomes.reduce((sum, item) => sum + item.value, 0);
-  const pie = outcomes.map((item) => ({ name: item.label, value: item.value, color: item.label === "Correctly deflected" ? "var(--accent)" : item.label === "Knowledge gaps" ? "var(--warn)" : item.label === "Tried, downvoted" ? "var(--danger)" : "var(--muted)" }));
+  // Same data as the Overview tab (lib/deflection-data.ts), so the two never disagree.
+  const outcomeIcons = { deflected: BookOpenCheck, gap: AlertTriangle, downvoted: ThumbsDown, critical: ShieldAlert } as const;
+  const outcomes = OUTCOMES.map((o) => ({
+    label: o.label,
+    value: Math.round((current[o.key] / current.total) * 100),
+    detail: o.detail,
+    icon: outcomeIcons[o.key],
+    color: o.color,
+  }));
+  const maxShare = Math.max(...outcomes.map((o) => o.value));
+  const trend = weeklyOutcomes.map((w) => ({ week: w.week, knowledge: w.deflected, gaps: w.gap, downvoted: w.downvoted, escalated: w.critical }));
+  const pie = outcomes.map((item) => ({ name: item.label, value: item.value, color: item.color }));
 
   return (
     <div className="flex flex-col gap-5">
@@ -475,11 +477,11 @@ function Insights({ sessionEvents, dataMode }: { sessionEvents: TrackedEvent[]; 
         {loadError && <p className="text-sm text-danger">{loadError}</p>}
       </div>
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        {outcomes.map((item) => { const Icon = item.icon; return <div key={item.label} className="rounded-lg border border-line bg-surface p-4"><div className="flex items-center justify-between"><Icon className={item.tone} size={18} aria-hidden /><span className="tabular text-2xl font-semibold">{item.value}%</span></div><p className="mt-3 text-sm font-medium">{item.label}</p><p className="mt-1 text-xs text-muted">{item.detail}</p><div className="mt-3 h-1.5 rounded-full bg-surface-2"><div className={`h-full rounded-full ${item.bar}`} style={{ width: `${item.value / 0.68}%` }} /></div></div>; })}
+        {outcomes.map((item) => { const Icon = item.icon; return <div key={item.label} className="rounded-lg border border-line bg-surface p-4"><div className="flex items-center justify-between"><Icon style={{ color: item.color }} size={18} aria-hidden /><span className="tabular text-2xl font-semibold">{item.value}%</span></div><p className="mt-3 text-sm font-medium">{item.label}</p><p className="mt-1 text-xs text-muted">{item.detail}</p><div className="mt-3 h-1.5 rounded-full bg-surface-2"><div className="h-full rounded-full" style={{ width: `${(item.value / maxShare) * 100}%`, background: item.color }} /></div></div>; })}
       </div>
       <div className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
         <section className="rounded-lg border border-line bg-surface p-4"><div className="mb-3"><h2 className="text-sm font-semibold">Deflection outcomes over time</h2><p className="text-xs text-muted">Volume by outcome, not just total automation.</p></div><DeflectionTrendChart data={trend} /></section>
-        <section className="rounded-lg border border-line bg-surface p-4"><h2 className="text-sm font-semibold">Outcome mix</h2><p className="mt-1 text-xs text-muted">{total}% of routed conversations</p><DeflectionOutcomeChart data={pie} /></section>
+        <section className="rounded-lg border border-line bg-surface p-4"><h2 className="text-sm font-semibold">Outcome mix</h2><p className="mt-1 text-xs text-muted">Share of {current.total} requests, last 4 weeks</p><DeflectionOutcomeChart data={pie} /></section>
       </div>
       <section className="rounded-lg border border-line bg-surface p-4"><div className="mb-3"><h2 className="text-sm font-semibold">Knowledge action queue</h2><p className="text-xs text-muted">Where the team should improve the knowledge base next.</p></div><div className="grid gap-3 md:grid-cols-3"><div className="rounded-md bg-warn-soft p-3"><p className="text-xs font-medium text-warn">Top gap category</p><p className="mt-1 font-semibold">Payroll deductions</p><p className="mt-1 text-xs text-muted">32 unresolved questions</p></div><div className="rounded-md bg-danger-soft p-3"><p className="text-xs font-medium text-danger">Downvote hotspot</p><p className="mt-1 font-semibold">Leave exceptions</p><p className="mt-1 text-xs text-muted">18% answer rejection rate</p></div><div className="rounded-md bg-accent-soft p-3"><p className="text-xs font-medium text-accent">Critical routing</p><p className="mt-1 font-semibold">Compensation disputes</p><p className="mt-1 text-xs text-muted">100% direct escalation</p></div></div></section>
       <section className="rounded-lg border border-line bg-surface p-4"><h2 className="mb-2 text-sm font-semibold">Tracked events by name</h2>{counts.length ? <EventCountChart data={counts} /> : <p className="py-8 text-center text-sm text-muted">No events yet. Open a {appConfig.entity.singular} or create one, then come back here.</p>}</section>
