@@ -468,7 +468,6 @@ function Insights({ sessionEvents, dataMode }: { sessionEvents: TrackedEvent[]; 
   }));
   const maxShare = Math.max(...outcomes.map((o) => o.value));
   const trend = weeklyOutcomes.map((w) => ({ week: w.week, knowledge: w.deflected, gaps: w.gap, downvoted: w.downvoted, escalated: w.critical }));
-  const total = outcomes.reduce((sum, item) => sum + item.value, 0);
   const pie = outcomes.map((item) => ({ name: item.label, value: item.value, color: item.color }));
 
   return (
