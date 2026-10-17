@@ -1,0 +1,12 @@
+{
+  "name": "interview-sandbox",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "hostRequirements": { "cpus": 2 },
+  "postCreateCommand": "npm install && npm install -g @anthropic-ai/claude-code",
+  "forwardPorts": [3000],
+  "portsAttributes": { "3000": { "label": "Sandbox app", "onAutoForward": "openPreview" } },
+  "customizations": {
+    "codespaces": { "openFiles": ["README.md"] },
+    "vscode": { "extensions": ["dbaeumer.vscode-eslint", "bradlc.vscode-tailwindcss"] }
+  }
+}

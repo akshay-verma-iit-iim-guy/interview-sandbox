@@ -1,26 +1,79 @@
 @import "tailwindcss";
 
+/* Design tokens: change these to re-skin the whole sandbox for a new prompt. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg: #eef2f1;
+  --surface: #ffffff;
+  --surface-2: #f5f7f6;
+  --ink: #17212b;
+  --muted: #5b6672;
+  --line: #d7dedc;
+  --accent: #0e7c66;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcefe9;
+  --warn: #b7791f;
+  --warn-soft: #f8ecd6;
+  --danger: #b4232c;
+  --danger-soft: #f8dfe0;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #121a20;
+    --surface: #1a242c;
+    --surface-2: #202c35;
+    --ink: #e6ecef;
+    --muted: #9aa7b2;
+    --line: #2e3c46;
+    --accent: #3fb59a;
+    --accent-ink: #0d1a16;
+    --accent-soft: #1d3a33;
+    --warn: #e0a84e;
+    --warn-soft: #3a2e1b;
+    --danger: #f07178;
+    --danger-soft: #3b2226;
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
 }
