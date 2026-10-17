@@ -15,6 +15,11 @@
   --warn-soft: #f8ecd6;
   --danger: #b4232c;
   --danger-soft: #f8dfe0;
+  /* Deflection outcome series (validated for colour-blind separation) */
+  --o-deflected: #0f8a6c;
+  --o-gap: #b7791f;
+  --o-downvoted: #c2323b;
+  --o-critical: #4a6fd4;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -32,6 +37,10 @@
     --warn-soft: #3a2e1b;
     --danger: #f07178;
     --danger-soft: #3b2226;
+    --o-deflected: #2a9d82;
+    --o-gap: #b98a1e;
+    --o-downvoted: #d24a6a;
+    --o-critical: #6c86e2;
   }
 }
 
@@ -49,6 +58,10 @@
   --color-warn-soft: var(--warn-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
+  --color-o-deflected: var(--o-deflected);
+  --color-o-gap: var(--o-gap);
+  --color-o-downvoted: var(--o-downvoted);
+  --color-o-critical: var(--o-critical);
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
